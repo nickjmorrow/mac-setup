@@ -49,7 +49,6 @@ cask "rectangle"           # window snapping; scriptable via rectangle:// URLs (
 
 # ── Dev ──────────────────────────────────────────────────────────────
 cask "visual-studio-code"
-cask "cursor"
 cask "iterm2"
 cask "github"              # GitHub Desktop
 cask "orbstack"            # Docker and Linux VMs
