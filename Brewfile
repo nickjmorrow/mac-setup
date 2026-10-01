@@ -29,6 +29,7 @@ brew "resvg"                # SVG → PNG for Midnight Sun app icons
 
 # ── Apps ─────────────────────────────────────────────────────────────
 cask "claude"
+cask "claude-code"         # CLI agent
 cask "opencode-desktop"   # coding agent app for the local model (~/Projects/local-llm)
 cask "sync"                # Sync.com → ~/Sync
 cask "google-chrome"
