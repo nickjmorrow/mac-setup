@@ -1,8 +1,8 @@
 # Mac setup manual
 
-How Nicholas's Macs are set up, so a new one can be made to match, and the rules any coding agent follows on them. Agents read it together with two private files kept in Sync: `~/Sync/secrets/AGENTS.local.md` (what's specific to his machines, plus the changelog) and the manual of his personal agent system.
+How Nicholas's Macs are set up, so a new one can be made to match, and the rules any coding agent follows on them. Agents read it together with two private files: the machines' private notes (`MACHINES.md`) and the manual of his personal agent (`AGENTS.md`), both in his private agent-harness repo.
 
-Keep it current. This repo is public, so it holds only what helps set up a new Mac: anything that names an address, a hostname, a private repo or a secret, or that's only history, goes in `AGENTS.local.md`.
+Keep it current. This repo is public, so it holds only what helps set up a new Mac: anything that names an address, a hostname, a private repo or a secret, or that's only history, goes in the private `MACHINES.md`.
 
 ## The owner
 
@@ -12,9 +12,9 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 ## Setting up a new Mac
 
 1. Sign in to iCloud and the App Store. Clone this repo to `~/Projects/mac-setup` and run `./setup.sh` in a terminal.
-2. It installs Sync.com along with everything else. Sign in to Sync.com, wait for `~/Sync` to finish syncing, then run `./setup.sh` again: it links the secrets back into place, clones the personal repos in `~/Sync/secrets/repos.txt` and runs each one's `install.sh`.
+2. It installs `bws` (Bitwarden Secrets Manager's CLI) and asks for the machine account's access token, saved in the login Keychain. Run `./setup.sh` again: `secrets.py` pulls every secret into place, then it clones the personal repos listed in the private repo list and runs each one's `install.sh`.
 3. Run `./macos.sh` for macOS preferences (the agent asks first; it changes system settings).
-4. Do the settings below that no script covers. Re-run `./link-secrets.sh` after cloning projects whose `.env` files it manages.
+4. Do the settings below that no script covers. Re-run `./secrets.py pull` after cloning a project whose `.env` lives in Bitwarden.
 
 ## Settings no script covers
 
@@ -33,7 +33,7 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 | --- | --- |
 | `~/Downloads` | Inbox. Keep it near zero: triage items and propose where each goes. Never delete without asking. |
 | `~/Projects` | All code. One folder per project, each a git repo. |
-| `~/Sync` | Cloud-backed things Nicholas cares about, via Sync.com (end-to-end encrypted). `~/Sync/secrets` holds the private files this repo needs (see `link-secrets.sh`). |
+| `~/Sync` | Cloud-backed things Nicholas cares about, via Sync.com (end-to-end encrypted). Not for secrets. |
 | `~/Documents` | TBD — don't organize or put things here until a convention is decided. |
 
 ## Packages
@@ -46,7 +46,7 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 
 - `setup.sh` — idempotent bootstrap: Homebrew, adopt pre-installed apps, `brew bundle`. Run it in a real terminal (installers may ask for a password).
 - `macos.sh` — macOS preferences (appearance, trackpad, Dock). Changes system settings, so the agent asks before running it.
-- `link-secrets.sh` — secrets live in `~/Sync/secrets` (Sync.com, end-to-end encrypted). It links or copies each file listed in the private `~/Sync/secrets/manifest.tsv` into its usual place (`~/.zshrc.local`, app logins, projects' `.env` files, the SSH key), so tools read the usual paths and every change lands in Sync. A new secret file gets a line in the manifest. Never keep secrets anywhere else.
+- `secrets.py` — secrets live in Bitwarden Secrets Manager (project `personal-agent`), never in git or a synced folder. Each secret's key says where it goes: `env:NAME` becomes a line in `~/.zshrc.local`, `file:~/path` a file (mode 600). `pull` writes them all (`--check` shows what would change); `push-env` / `push-file` upload a change. The token comes from the login Keychain, so on a server Mac run it from the login session, not over SSH. Files that apps rewrite on their own (refreshing login tokens) and SSH keys (one per Mac) stay local.
 - `tools/display-brightness` — day/night monitor brightness (see its README).
 
 ## Dotfiles
@@ -55,7 +55,7 @@ Shell and tool config lives in [nickjmorrow/dotfiles](https://github.com/nickjmo
 
 - Keep it up to date: when shell or tool config changes, change it in the dotfiles repo, commit, and push. The agent may push the dotfiles repo without asking.
 - **Theme:** Midnight Sun (navy + sunshine yellow) lives in `dotfiles/themes/midnight-sun`. Edit `palette.json`, run `build.py`; it feeds Logseq, iTerm2, VS Code and Linear. Terminal apps that support it use the ANSI palette, so they inherit iTerm's colors.
-- **Never commit secrets there.** Tokens and machine-specific settings go in `~/.zshrc.local`, which isn't tracked (it's a link into `~/Sync/secrets`).
+- **Never commit secrets there.** Tokens and machine-specific settings go in `~/.zshrc.local`, which isn't tracked (`secrets.py pull` writes it from Bitwarden).
 
 ## Ask first
 
@@ -64,8 +64,8 @@ The agent must ask Nicholas and wait for a clear yes before:
 - **Deleting anything** — files, folders, uninstalling apps or packages, emptying the Trash, force-overwriting. (Git branches are the exception: the agent may delete them without asking, since 2026-09-28.)
 - **Changing security or system settings** — FileVault, firewall, Gatekeeper, SIP, lock screen/password, sharing, privacy and security permissions, login/background items, computer name.
 - **Running anything with `sudo`.**
-- **Pushing to a remote or publishing anything** (except the dotfiles repo, above, this repo and his own personal repos listed in `~/Sync/secrets/repos.txt`: the agent may push any commit there without asking, force pushes included).
-- **Moving anything into or out of `~/Sync`** (except a new secret file into `~/Sync/secrets` through `link-secrets.sh`).
+- **Pushing to a remote or publishing anything** (except the dotfiles repo, above, this repo and his own personal repos listed in the private repo list: the agent may push any commit there without asking, force pushes included).
+- **Moving anything into or out of `~/Sync`.** Adding or changing a secret in Bitwarden with `secrets.py push-*` is fine.
 
 Free to do without asking: read-only checks, Homebrew installs (recorded in `Brewfile`), creating files in `~/Projects`, and edits and commits inside this repo.
 
