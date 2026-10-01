@@ -88,8 +88,12 @@ mas "iMovie", id: 408981434
 mas "Xcode", id: 497799835  # ~15 GB
 
 # ── Global npm ───────────────────────────────────────────────────────
+# brew bundle can't pin npm versions: it matches entries to `npm ls -g` by bare name, so a "name@1.2.3" entry
+# always reads as missing (`brew bundle check` fails, every run reinstalls) and `cleanup` would remove the
+# package. It does install with --ignore-scripts and a minimum release age. Versions known good are noted here;
+# to pin by hand: `npm install -g --ignore-scripts name@version`.
 npm "corepack"
-npm "eight-sleep-mcp-unofficial"   # Eight Sleep MCP server (life-mcp)
+npm "eight-sleep-mcp-unofficial"   # Eight Sleep MCP server (life-mcp); known good: 0.2.13
 
 # ── VS Code extensions ───────────────────────────────────────────────
 vscode "ahmadawais.shades-of-purple"
