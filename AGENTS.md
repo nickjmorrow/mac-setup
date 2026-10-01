@@ -12,7 +12,7 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 ## Setting up a new Mac
 
 1. Sign in to iCloud and the App Store. Clone this repo to `~/Projects/mac-setup` and run `./setup.sh` in a terminal.
-2. It installs `bws` (Bitwarden Secrets Manager's CLI) and asks for the machine account's access token, saved in the login Keychain. Run `./setup.sh` again: `secrets.py` pulls every secret into place, then it clones the personal repos listed in the private repo list and runs each one's `install.sh`.
+2. It installs `bws` (Bitwarden Secrets Manager's CLI; pinned SHA-256, then Bitwarden's signature and Apple's notarization are checked) and asks for an access token, saved in the login Keychain with no app trusted (`-T ""`), so each read asks first: a read-only machine account's token as `bws-access-token-read` (what `pull` uses), plus, only on a Mac that pushes secrets, the read-write one as `bws-access-token`. Click Allow, not Always Allow. Run `./setup.sh` again: `secrets.py` pulls every secret into place, then it clones the personal repos listed in the private repo list and runs each one's `install.sh`.
 3. Run `./macos.sh` for macOS preferences (the agent asks first; it changes system settings).
 4. Do the settings below that no script covers. Re-run `./secrets.py pull` after cloning a project whose `.env` lives in Bitwarden.
 
@@ -41,12 +41,13 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 - The agent may install packages with Homebrew without asking.
 - Every install or removal is reflected in `Brewfile` in the same change. Edit it by hand, in the right section with a short comment: `brew bundle dump --force` would wipe its sections and comments (use `brew bundle dump --file=- ` only to spot what's missing).
 - App Store apps go in the Brewfile too, as `mas` lines.
+- Global npm packages can't be pinned in the Brewfile (`brew bundle` matches them by bare name); note the known-good version in a comment beside the line.
 
 ## Scripts
 
 - `setup.sh` — idempotent bootstrap: Homebrew, adopt pre-installed apps, `brew bundle`. Run it in a real terminal (installers may ask for a password).
 - `macos.sh` — macOS preferences (appearance, trackpad, Dock). Changes system settings, so the agent asks before running it.
-- `secrets.py` — secrets live in Bitwarden Secrets Manager (project `personal-agent`), never in git or a synced folder. Each secret's key says where it goes: `env:NAME` becomes a line in `~/.zshrc.local`, `file:~/path` a file (mode 600). `pull` writes them all (`--check` shows what would change); `push-env` / `push-file` upload a change. The token comes from the login Keychain, so on a server Mac run it from the login session, not over SSH. Files that apps rewrite on their own (refreshing login tokens) and SSH keys (one per Mac) stay local.
+- `secrets.py` — secrets live in Bitwarden Secrets Manager (project `personal-agent`), never in git or a synced folder. Each secret's key says where it goes: `env:NAME` becomes a line `export NAME='value'` in `~/.zshrc.local` (names must match `^[A-Z_][A-Z0-9_]*$`; values are stored raw and shell-quoted on write; an older value stored with its quotes, like `"abc"`, is unquoted on pull, and `push-env` stores it unquoted), `file:~/path` a file (mode 600). File destinations are an allowlist, checked on the resolved path (no `..`, no symlink leading elsewhere): `~/.config/**`, `~/.eight-sleep-mcp/**`, `~/.ssh/config`, and `.env` / `.env.*` directly inside a `~/Projects/<project>` folder. Anything else (shell rc files, `~/Library`, other `~/.ssh` files) is refused and reported, and `pull` exits 1; `push-file` refuses the same paths. `pull` writes them all (`--check` / `--dry-run` shows what would change and what's refused); `push-env` / `push-file` upload a change. Tokens come from the login Keychain (`pull` and `list` prefer `bws-access-token-read`, `push-*` use `bws-access-token`), so on a server Mac run it from the login session, not over SSH. Tests: `python3 -m unittest` (temp HOME and a fake `bws`; no network or Keychain). Files that apps rewrite on their own (refreshing login tokens) and SSH keys (one per Mac) stay local.
 - `tools/display-brightness` — day/night monitor brightness (see its README).
 
 ## Dotfiles
