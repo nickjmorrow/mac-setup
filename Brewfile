@@ -45,7 +45,7 @@ cask "vlc"
 cask "anki"
 cask "figma"
 cask "expressvpn"
-cask "transmission"        # BitTorrent (replaces qBittorrent)
+# qBittorrent (BitTorrent) is installed by hand from qbittorrent.org: Homebrew disabled its cask on 2026-09-01 (fails Gatekeeper). After copying it to /Applications: xattr -dr com.apple.quarantine /Applications/qbittorrent.app
 cask "rectangle"           # window snapping; scriptable via rectangle:// URLs (replaces Magnet)
 
 # ── Dev ──────────────────────────────────────────────────────────────
