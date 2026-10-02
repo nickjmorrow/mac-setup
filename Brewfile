@@ -27,6 +27,7 @@ brew "koekeishiya/formulae/skhd"   # global hotkeys (config in dotfiles skhd/skh
 brew "geckodriver"          # WebDriver for Firefox (Selenium scripts)
 brew "resvg"                # SVG → PNG for Midnight Sun app icons
 brew "tokei"                # count lines of code by language (research: codebase history)
+brew "tmux"                 # terminal multiplexer (drives a Claude Code session headlessly to screenshot mods)
 
 # ── Apps ─────────────────────────────────────────────────────────────
 cask "claude"
