@@ -290,6 +290,12 @@ class Push(Base):
             S.bws("secret", "create", "k", "-----BEGIN topsecret", "p1", write=True, secret="-----BEGIN topsecret")
         self.assertNotIn("topsecret", str(e.exception))
 
+    def test_echoed_secret_with_a_status_code_is_not_retried(self):
+        sleeps = []
+        with mock.patch.object(S.time, "sleep", sleeps.append), self.assertRaises(SystemExit):
+            S.bws("secret", "bogus", "env:K", "--value=pin-429-503", write=True, secret="pin-429-503")
+        self.assertEqual(sleeps, [])
+
     def test_bws_errors_hide_short_and_bare_values_but_keep_names(self):
         # The fake echoes every argument for an unknown command, like an error that prints the value bare.
         for value in ("abc", "line one\nline two"):

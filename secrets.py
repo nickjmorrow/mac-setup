@@ -75,22 +75,27 @@ def token(write: bool = False) -> str:
              f"{'' if write else ' or ' + WRITE_SERVICE}); see the top of secrets.py.")
 
 
+def _hide(text: str, secret: str | None) -> str:
+    """The text with the secret (whole, and each line of it) replaced: bws may repeat a value it refuses."""
+    if secret:
+        text = text.replace(secret, "<hidden>")
+        for line in secret.splitlines():
+            if line.strip():
+                text = text.replace(line, "<hidden>")
+    return text
+
+
 def bws(*args: str, write: bool = False, secret: str | None = None) -> list | dict:
     """Run bws. `secret` is the value being stored, if any: it is hidden from any error text."""
     env = {**os.environ, "BWS_ACCESS_TOKEN": token(write)}
     for attempt in range(6):  # rate limits (429) and brief outages (5xx): wait and retry
         # Options before the arguments: after "--" everything is a value, even one starting with "-".
         r = subprocess.run([BWS, *args[:2], "--output", "json", *args[2:]], capture_output=True, text=True, env=env)
-        if r.returncode == 0 or not any(c in r.stderr for c in ("429", "502", "503", "504")):
+        err = _hide(r.stderr.strip(), secret)   # a secret that happens to contain "429" is not a rate limit
+        if r.returncode == 0 or not any(c in err for c in ("429", "502", "503", "504")):
             break
         time.sleep(2 ** attempt)
     if r.returncode:
-        err = r.stderr.strip()
-        if secret:                    # bws may repeat a value it refuses; never print a secret
-            err = err.replace(secret, "<hidden>")
-            for line in secret.splitlines():
-                if line.strip():
-                    err = err.replace(line, "<hidden>")
         sys.exit(f"bws {args[0]} {args[1] if len(args) > 1 else ''} failed: {err[:300]}")
     return json.loads(r.stdout or "null")
 
