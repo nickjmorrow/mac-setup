@@ -55,7 +55,7 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 Shell and tool config lives in [nickjmorrow/dotfiles](https://github.com/nickjmorrow/dotfiles), cloned to `~/Projects/dotfiles`. Its `link.sh` symlinks files into `~` (`~/.zshrc`, `~/.config/git/ignore`, VS Code settings, the Midnight Sun VS Code theme and iTerm2 profile) and installs oh-my-zsh.
 
 - Keep it up to date: when shell or tool config changes, change it in the dotfiles repo, commit, and push. The agent may push the dotfiles repo without asking.
-- **Theme:** Midnight Sun (navy + sunshine yellow) lives in `dotfiles/themes/midnight-sun`. Edit `palette.json`, run `build.py`; it feeds Logseq, iTerm2, VS Code and Linear. Terminal apps that support it use the ANSI palette, so they inherit iTerm's colors.
+- **Theme:** Midnight Sun (navy + sunshine yellow) lives in `dotfiles/themes/midnight-sun`. Edit `palette.json`, run `build.py`; it feeds Logseq, iTerm2, VS Code, Linear and the iPhone home-screen icons (see its README; re-adding them on the phone is by hand). Terminal apps that support it use the ANSI palette, so they inherit iTerm's colors.
 - **Never commit secrets there.** Tokens and machine-specific settings go in `~/.zshrc.local`, which isn't tracked (`secrets.py pull` writes it from Bitwarden).
 
 ## Ask first
