@@ -26,6 +26,7 @@ brew "opencode"             # coding agent for the local model (config in dotfil
 brew "koekeishiya/formulae/skhd"   # global hotkeys (config in dotfiles skhd/skhdrc)
 brew "geckodriver"          # WebDriver for Firefox (Selenium scripts)
 brew "resvg"                # SVG → PNG for Midnight Sun app icons
+brew "tokei"                # count lines of code by language (research: codebase history)
 
 # ── Apps ─────────────────────────────────────────────────────────────
 cask "claude"
