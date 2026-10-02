@@ -27,12 +27,30 @@ import json, os, sys
 db = os.environ["FAKE_BWS_DB"]
 data = json.load(open(db))
 a = [x for x in sys.argv[1:] if x not in ("--output", "json")]
+# Like the real bws (clap): before "--", an argument starting with "-" is an option, and an unknown one
+# is refused with an error that repeats it.
+if "--" in a:
+    i = a.index("--"); head, tail = a[:i], a[i + 1:]
+else:
+    head, tail = a, []
+out, j = [], 0
+while j < len(head):
+    x = head[j]
+    if x == "--value" and j + 1 < len(head) and not head[j + 1].startswith("-"):
+        out += ["--value", head[j + 1]]; j += 2; continue
+    if x.startswith("--value="):
+        out += ["--value", x[len("--value="):]]; j += 1; continue
+    if x.startswith("-"):
+        sys.exit("error: unexpected argument '" + x + "' found")
+    out.append(x); j += 1
+a = out + tail
 if a[:2] == ["project", "list"]:
     print(json.dumps([{"id": "p1", "name": "personal-agent"}]))
 elif a[:2] == ["secret", "list"]:
     print(json.dumps([{"id": k, "key": k, "value": v} for k, v in data.items()]))
 elif a[:2] == ["secret", "edit"]:
-    data[a[2]] = a[4]; json.dump(data, open(db, "w")); print("{}")
+    rest = a[2:]; v = rest.index("--value"); value = rest[v + 1]; del rest[v:v + 2]
+    data[rest[0]] = value; json.dump(data, open(db, "w")); print("{}")
 elif a[:2] == ["secret", "create"]:
     data[a[2]] = a[3]; json.dump(data, open(db, "w")); print("{}")
 else:
@@ -255,6 +273,22 @@ class Push(Base):
         self.assertEqual(self.stored(), {"env:A": "v 1", "env:B": "it's"})
         _, out, _ = self.run_cmd("push-env")
         self.assertEqual(out.split(), ["same", "env:A", "same", "env:B"])
+
+    def test_push_file_pem_key(self):
+        pem = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n"
+        (self.home / ".config/x").mkdir(parents=True)
+        (self.home / ".config/x/k.p8").write_text(pem)
+        code, _, _ = self.run_cmd("push-file", str(self.home / ".config/x/k.p8"))
+        self.assertEqual(code, 0)
+        (self.home / ".config/x/k.p8").write_text("-" + pem)   # edit path too
+        code, _, _ = self.run_cmd("push-file", str(self.home / ".config/x/k.p8"))
+        self.assertEqual(code, 0)
+        self.assertEqual(self.stored(), {"file:~/.config/x/k.p8": "-" + pem})
+
+    def test_bws_errors_never_show_values(self):
+        with self.assertRaises(SystemExit) as e:
+            S.bws("secret", "create", "k", "-----BEGIN topsecret", "p1", write=True)
+        self.assertNotIn("topsecret", str(e.exception))
 
     def test_push_file_allowlist(self):
         (self.home / ".config/x").mkdir(parents=True)

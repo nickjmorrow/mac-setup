@@ -78,12 +78,18 @@ def token(write: bool = False) -> str:
 def bws(*args: str, write: bool = False) -> list | dict:
     env = {**os.environ, "BWS_ACCESS_TOKEN": token(write)}
     for attempt in range(6):  # rate limits (429) and brief outages (5xx): wait and retry
-        r = subprocess.run([BWS, *args, "--output", "json"], capture_output=True, text=True, env=env)
+        # Options before the arguments: after "--" everything is a value, even one starting with "-".
+        r = subprocess.run([BWS, *args[:2], "--output", "json", *args[2:]], capture_output=True, text=True, env=env)
         if r.returncode == 0 or not any(c in r.stderr for c in ("429", "502", "503", "504")):
             break
         time.sleep(2 ** attempt)
     if r.returncode:
-        sys.exit(f"bws {args[0]} {args[1] if len(args) > 1 else ''} failed: {r.stderr.strip()[:300]}")
+        err = r.stderr.strip()
+        for a in args[2:]:            # bws repeats a refused argument; never print a secret's value
+            for piece in [a, *a.splitlines()]:
+                if len(piece) >= 6:
+                    err = err.replace(piece, "<hidden>")
+        sys.exit(f"bws {args[0]} {args[1] if len(args) > 1 else ''} failed: {err[:300]}")
     return json.loads(r.stdout or "null")
 
 
@@ -258,9 +264,9 @@ def upsert(pid: str, existing: dict, key: str, value: str) -> str:
     if key in existing:
         if existing[key]["value"] == value:
             return f"same     {key}"
-        bws("secret", "edit", existing[key]["id"], "--value", value, write=True)
+        bws("secret", "edit", f"--value={value}", existing[key]["id"], write=True)
         return f"updated  {key}"
-    bws("secret", "create", key, value, pid, write=True)
+    bws("secret", "create", "--", key, value, pid, write=True)
     return f"created  {key}"
 
 
