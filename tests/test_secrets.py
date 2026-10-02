@@ -287,8 +287,18 @@ class Push(Base):
 
     def test_bws_errors_never_show_values(self):
         with self.assertRaises(SystemExit) as e:
-            S.bws("secret", "create", "k", "-----BEGIN topsecret", "p1", write=True)
+            S.bws("secret", "create", "k", "-----BEGIN topsecret", "p1", write=True, secret="-----BEGIN topsecret")
         self.assertNotIn("topsecret", str(e.exception))
+
+    def test_bws_errors_hide_short_and_bare_values_but_keep_names(self):
+        # The fake echoes every argument for an unknown command, like an error that prints the value bare.
+        for value in ("abc", "line one\nline two"):
+            with self.assertRaises(SystemExit) as e:
+                S.bws("secret", "bogus", "env:MY_KEY", f"--value={value}", write=True, secret=value)
+            msg = str(e.exception)
+            self.assertIn("env:MY_KEY", msg)
+            for piece in [value, *value.splitlines()]:
+                self.assertNotIn(piece, msg)
 
     def test_push_file_allowlist(self):
         (self.home / ".config/x").mkdir(parents=True)
