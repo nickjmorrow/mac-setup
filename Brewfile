@@ -17,7 +17,7 @@ brew "deno"
 brew "bun"                 # JS runtime + package manager (CodeCrafters TypeScript challenges)
 brew "node"                # default Node; stable path for global npm tools
 brew "defaultbrowser"      # set default browser (used by macos.sh)
-brew "uv"                  # Python + runs the Logseq MCP server (replaces pyenv/poetry/conda)
+brew "uv"                  # Python + runs the Life connector (replaces pyenv/poetry/conda)
 brew "awscli"
 tap "keith/formulae"
 brew "keith/formulae/reminders-cli"   # Apple Reminders CLI (life-mcp)

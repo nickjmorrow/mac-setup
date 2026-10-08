@@ -24,7 +24,6 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 - Git identity set globally (Nicholas Morrow, njmorrow95@gmail.com — use this, not the GitHub noreply address); default branch `main`.
 - Never sleeps on AC power (`pmset -c sleep 0`), so services keep running.
 - Tailscale signed in with GitHub.
-- Logseq is a login item with its API server set to auto start.
 - **Monitor brightness by time of day:** the external monitors' software brightness (BetterDisplay, a login item; the dock blocks DDC) is set to day (100%) at sunrise and to his night levels at sunset by `tools/display-brightness` (launchd `com.nicholai.display-brightness`, log `~/Library/Logs/display-brightness.log`; see its README). Hotkeys via skhd (dotfiles `skhd/skhdrc`, needs Accessibility): ⌃⌥⌘B toggle, ⌃⌥⌘↑/↓ ±10%.
 
 ## Folders
