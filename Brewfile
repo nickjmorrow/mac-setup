@@ -27,6 +27,7 @@ brew "opencode"             # coding agent for the local model (config in dotfil
 brew "koekeishiya/formulae/skhd"   # global hotkeys (config in dotfiles skhd/skhdrc)
 brew "geckodriver"          # WebDriver for Firefox (Selenium scripts)
 brew "resvg"                # SVG → PNG for Midnight Sun app icons
+brew "fileicon"             # set custom Mac app icons (dotfiles themes/midnight-sun/mac/apply-icons.sh)
 brew "tokei"                # count lines of code by language (research: codebase history)
 brew "tmux"                 # terminal multiplexer (drives a Claude Code session headlessly to screenshot mods)
 
@@ -49,7 +50,7 @@ cask "anki"
 cask "figma"
 cask "expressvpn"
 # qBittorrent (BitTorrent) is installed by hand from qbittorrent.org: Homebrew disabled its cask on 2026-09-01 (fails Gatekeeper). After copying it to /Applications: xattr -dr com.apple.quarantine /Applications/qbittorrent.app
-cask "rectangle"           # window snapping; scriptable via rectangle:// URLs (replaces Magnet)
+cask "rectangle"           # window snapping; scriptable via rectangle:// URLs
 
 # ── Dev ──────────────────────────────────────────────────────────────
 cask "visual-studio-code"
@@ -74,7 +75,6 @@ cask "font-noto-color-emoji"
 # ── App Store (sign in to the App Store app first) ───────────────────
 mas "Bitwarden", id: 1352778147
 mas "Fantastical", id: 975937182
-mas "Magnet", id: 441258766
 mas "Slack", id: 803453959
 mas "Kindle", id: 302584613
 mas "Streaks", id: 963034692
