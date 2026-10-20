@@ -16,6 +16,7 @@ brew "cocoapods"
 brew "deno"
 brew "bun"                 # JS runtime + package manager (CodeCrafters TypeScript challenges)
 brew "node"                # default Node; stable path for global npm tools
+brew "pnpm"                # package manager for Hoard (and other TS projects)
 brew "defaultbrowser"      # set default browser (used by macos.sh)
 brew "uv"                  # Python + runs the Life connector (replaces pyenv/poetry/conda)
 brew "awscli"
