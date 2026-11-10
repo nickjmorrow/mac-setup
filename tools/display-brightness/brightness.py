@@ -5,16 +5,20 @@ The dock blocks DDC, so BetterDisplay must be running. Usage:
   brightness.py day | night      apply a preset now
   brightness.py toggle           switch between them
   brightness.py up | down        all monitors ±10%
-  brightness.py auto             apply the preset for the time of day, only when sunrise/sunset
-                                 has passed since the last run (so manual changes stick until then)
+  brightness.py auto             apply the preset for the time of day when sunrise/sunset has passed
+                                 since the last run or the monitors were just plugged in (so manual
+                                 changes stick until then)
   brightness.py status
 """
 from __future__ import annotations
 
+import ctypes
+import ctypes.util
 import json
 import math
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -36,8 +40,32 @@ STEP = 0.10
 
 
 def bd(*args: str) -> str:
-    r = subprocess.run([BD, *args], capture_output=True, text=True, timeout=15)
+    try:
+        r = subprocess.run([BD, *args], capture_output=True, text=True, timeout=15)
+    except subprocess.TimeoutExpired:
+        return ""  # BetterDisplay not running or not answering
     return r.stdout.strip()
+
+
+def externals_connected() -> bool:
+    """True when any non-built-in display is online (cheap: CoreGraphics, no BetterDisplay call)."""
+    cg = ctypes.CDLL(ctypes.util.find_library("CoreGraphics"))
+    cg.CGDisplayIsBuiltin.restype = ctypes.c_bool
+    ids, n = (ctypes.c_uint32 * 32)(), ctypes.c_uint32()
+    cg.CGGetOnlineDisplayList(32, ids, ctypes.byref(n))
+    return any(not cg.CGDisplayIsBuiltin(ids[i]) for i in range(n.value))
+
+
+def ensure_betterdisplay() -> bool:
+    """Start BetterDisplay if it isn't running; True once it answers for a monitor."""
+    if subprocess.run(["pgrep", "-xq", "BetterDisplay"]).returncode != 0:
+        subprocess.run(["open", "-gja", "BetterDisplay"])
+        time.sleep(5)
+    for _ in range(4):
+        if any(get(u) is not None for u in MONITORS):
+            return True
+        time.sleep(5)
+    return False
 
 
 def get(uuid: str) -> float | None:
@@ -111,12 +139,21 @@ def main(cmd: str) -> None:
     elif cmd == "auto":
         mode, period = period_now()
         state = load()
-        if state.get("period") != period:
-            # Only act once per period, and only if the monitors are there to take it.
-            if any(get(u) is not None for u in MONITORS):
+        if not externals_connected():
+            if state.get("connected"):
+                save({**state, "connected": False})
+            return
+        # Act once per period, and again whenever the monitors are freshly plugged in
+        # (BetterDisplay may have been closed, or reset them, while they were away).
+        plugged_in = not state.get("connected")
+        if state.get("period") != period or plugged_in:
+            if ensure_betterdisplay():
                 apply(mode)
-                save({**load(), "period": period})
-                print(f"{datetime.now():%F %T} {period}: applied {mode}", flush=True)
+                save({**load(), "period": period, "connected": True})
+                why = "plugged in" if plugged_in else "new period"
+                print(f"{datetime.now():%F %T} {period}: applied {mode} ({why})", flush=True)
+            else:
+                print(f"{datetime.now():%F %T} BetterDisplay not answering; will retry", flush=True)
     elif cmd == "status":
         rise, sset = sun_times(datetime.now().date())
         print(f"now: {period_now()[0]}  sunrise {rise.astimezone():%H:%M}  sunset {sset.astimezone():%H:%M}")
