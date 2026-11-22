@@ -31,6 +31,7 @@ brew "resvg"                # SVG → PNG for Midnight Sun app icons
 brew "fileicon"             # set custom Mac app icons (dotfiles themes/midnight-sun/mac/apply-icons.sh)
 brew "tokei"                # count lines of code by language (research: codebase history)
 brew "tmux"                 # terminal multiplexer (drives a Claude Code session headlessly to screenshot mods)
+brew "pmtiles"              # cuts map extracts from the Protomaps world build (~/Projects/haunt)
 
 # ── Apps ─────────────────────────────────────────────────────────────
 cask "claude"
