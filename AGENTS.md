@@ -48,6 +48,11 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 - `macos.sh` — macOS preferences (appearance, trackpad, Dock). Changes system settings, so the agent asks before running it.
 - `secrets.py` — secrets live in Bitwarden Secrets Manager (project `personal-agent`), never in git or a synced folder. Each secret's key says where it goes: `env:NAME` becomes a line `export NAME='value'` in `~/.zshrc.local` (names must match `^[A-Z_][A-Z0-9_]*$`; values are stored raw and shell-quoted on write; an older value stored with its quotes, like `"abc"`, is unquoted on pull, and `push-env` stores it unquoted), `file:~/path` a file (mode 600). File destinations are an allowlist, checked on the resolved path (no `..`, no symlink leading elsewhere): `~/.config/**`, `~/.eight-sleep-mcp/**`, `~/.ssh/config`, and `.env` / `.env.*` directly inside a `~/Projects/<project>` folder. Anything else (shell rc files, `~/Library`, other `~/.ssh` files) is refused and reported, and `pull` exits 1; `push-file` refuses the same paths. `pull` writes them all (`--check` / `--dry-run` shows what would change and what's refused); `push-env` / `push-file` upload a change. Tokens come from the login Keychain (`pull` and `list` prefer `bws-access-token-read`, `push-*` use `bws-access-token`), so on a server Mac run it from the login session, not over SSH. Tests: `python3 -m unittest` (temp HOME and a fake `bws`; no network or Keychain). Files that apps rewrite on their own (refreshing login tokens) and SSH keys (one per Mac) stay local.
 - `tools/display-brightness` — day/night monitor brightness (see its README).
+- `tools/set-env-secret NAME [ssh-host …]` — sets or rotates a shared env secret from the clipboard: Bitwarden (`env:NAME`), this Mac's `~/.zshrc.local` and each host's. The value never shows on screen.
+
+## Shared API keys
+
+API keys more than one project uses (`ANTHROPIC_API_KEY` and the like) are `env:` secrets, so every shell, project and agent on every Mac finds them in the environment. Projects read them from there; never copy a key into a project's `.env`, where it goes stale when the key is rotated. A launchd service doesn't load the shell, so its run script sources `~/.zshrc.local` before starting. To add or rotate a key, have him copy it and run `tools/set-env-secret`, then restart the services that use it.
 
 ## Dotfiles
 
