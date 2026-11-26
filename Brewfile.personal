@@ -1,0 +1,70 @@
+# Personal Macs only (not a work laptop): his own apps and projects, App Store apps, media, VPNs.
+# setup.sh installs this after Brewfile unless the Mac was set up with --work.
+
+# ── CLI ──────────────────────────────────────────────────────────────
+brew "mas"                 # App Store installs below
+brew "ffmpeg"
+brew "yt-dlp"
+brew "cocoapods"
+tap "keith/formulae"
+brew "keith/formulae/reminders-cli"   # Apple Reminders CLI (life-mcp); trusted by setup.sh
+brew "xcodegen"            # generates Xcode projects (life-mcp's HomeKit helper app)
+brew "llama.cpp"            # local LLMs: llama-server, llama-bench (~/Projects/local-llm)
+brew "opencode"             # coding agent for the local model (config in dotfiles)
+brew "geckodriver"          # WebDriver for Firefox (Selenium scripts)
+brew "resvg"                # SVG → PNG for Midnight Sun app icons
+brew "fileicon"             # set custom Mac app icons (dotfiles themes/midnight-sun/mac/apply-icons.sh)
+brew "pmtiles"              # cuts map extracts from the Protomaps world build (~/Projects/haunt)
+brew "tectonic"             # LaTeX → PDF
+brew "poppler"              # PDF tools (pdftotext, pdftoppm)
+
+# ── Apps ─────────────────────────────────────────────────────────────
+cask "opencode-desktop"   # coding agent app for the local model (~/Projects/local-llm)
+cask "sync"                # Sync.com → ~/Sync
+cask "brave-browser"
+cask "linear"
+cask "logseq"
+cask "signal"
+cask "discord"
+cask "zoom"
+cask "spotify"
+cask "vlc"
+cask "anki"
+cask "figma"
+cask "expressvpn"
+cask "protonvpn"           # the VPN qBittorrent is bound to
+cask "obs"                 # streaming and recording
+cask "ea"                  # EA app (games)
+# qBittorrent (BitTorrent) is installed by hand from qbittorrent.org: Homebrew disabled its cask on 2026-09-01 (fails Gatekeeper). After copying it to /Applications: xattr -dr com.apple.quarantine /Applications/qbittorrent.app
+# PureRef (reference boards) is installed by hand from pureref.com: it has no cask.
+
+# ── Dev ──────────────────────────────────────────────────────────────
+cask "orbstack"            # Docker and Linux VMs (free for personal use only)
+cask "ngrok"
+cask "tailscale-app"       # tailnet + Funnel
+cask "raspberry-pi-imager"
+cask "tableplus"           # database GUI
+
+# ── App Store (sign in to the App Store app first) ───────────────────
+mas "Bitwarden", id: 1352778147
+mas "Fantastical", id: 975937182
+mas "Slack", id: 803453959
+mas "Kindle", id: 302584613
+mas "Streaks", id: 963034692
+mas "RadarScope", id: 288419283
+mas "Health Auto Export", id: 1115567069
+mas "Family Tools", id: 1541899076
+mas "GIPHY Capture", id: 668208984
+mas "MindNode", id: 6446116532
+mas "Keynote", id: 361285480
+mas "Numbers", id: 361304891
+mas "Pages", id: 361309726
+mas "GarageBand", id: 682658836
+mas "iMovie", id: 408981434
+mas "TestFlight", id: 899247664
+mas "Xcode", id: 497799835  # ~15 GB
+
+# ── Global npm (versions can't be pinned: see the note in Brewfile) ──
+npm "eight-sleep-mcp-unofficial"   # Eight Sleep MCP server (life-mcp); known good: 0.2.13
+npm "@readwise/cli"                # Readwise Reader CLI; known good: 0.5.9
+npm "netlify-cli"                  # known good: 27.12.0

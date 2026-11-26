@@ -1,8 +1,19 @@
 #!/usr/bin/env zsh
 # Bring one of Nicholas's Macs up to spec (see AGENTS.md). Safe to re-run.
 # Run it in a real terminal: some installers ask for your password.
+#   ./setup.sh          a personal Mac: everything
+#   ./setup.sh --work   an employer's Mac: Brewfile and dotfiles only. No personal apps, secrets or repos.
+#                       The choice is remembered (~/.config/mac-setup/profile), so later runs stay in work mode.
 set -euo pipefail
 HERE="${0:A:h}"
+PROFILE_FILE=~/.config/mac-setup/profile
+case ${1:-} in
+  --work) mkdir -p ${PROFILE_FILE:h} && print work > $PROFILE_FILE ;;
+  "") ;;
+  *) print -u2 "usage: setup.sh [--work]"; exit 2 ;;
+esac
+PROFILE=personal
+[[ -f $PROFILE_FILE && $(<$PROFILE_FILE) == work ]] && PROFILE=work
 
 step() { print -P "\n%F{cyan}==>%f %B$1%b" }
 
@@ -14,7 +25,7 @@ eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 
 step "Adopt apps installed outside Homebrew"
 # brew bundle fails on an app that already exists but isn't brew-managed.
-typeset -A preinstalled=(google-chrome "Google Chrome" claude "Claude")
+typeset -A preinstalled=(google-chrome "Google Chrome" claude "Claude" obs "OBS" protonvpn "ProtonVPN")
 for cask app in ${(kv)preinstalled}; do
   if [[ -d "/Applications/$app.app" ]] && ! brew list --cask "$cask" &>/dev/null; then
     brew install --cask --adopt "$cask"
@@ -22,16 +33,28 @@ for cask app in ${(kv)preinstalled}; do
 done
 
 step "Brewfile"
-if ! mas list &>/dev/null; then
-  print "Not signed in to the App Store — App Store apps may fail. Sign in via the App Store app and re-run."
-fi
+# Homebrew refuses a formula from a third-party tap until it's trusted. Trust exactly the ones the Brewfiles name.
+TRUSTED_FORMULAE=(asmvik/formulae/skhd keith/formulae/reminders-cli)
+brew trust --formula $TRUSTED_FORMULAE
 brew bundle --file="$HERE/Brewfile"
+if [[ $PROFILE == work ]]; then
+  print "Work Mac: skipping Brewfile.personal."
+else
+  print "App Store apps need you signed in to the App Store app; if they fail, sign in and re-run."
+  brew bundle --file="$HERE/Brewfile.personal"
+fi
 
 step "Dotfiles"
 if [[ ! -d ~/Projects/dotfiles ]]; then
   git clone https://github.com/nickjmorrow/dotfiles.git ~/Projects/dotfiles
 fi
 ~/Projects/dotfiles/link.sh
+
+if [[ $PROFILE == work ]]; then
+  step "Done"
+  print "Work Mac: no personal secrets or repos here. Next: the work-Mac list in AGENTS.md."
+  exit 0
+fi
 
 step "Secrets"
 # They live in Bitwarden Secrets Manager; secrets.py pulls them into place. Needs bws (installed here: a pinned

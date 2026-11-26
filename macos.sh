@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Roland's macOS preferences (from Edgar). Safe to re-run.
+# macOS preferences for any of Nicholas's Macs, a work laptop included. Safe to re-run.
 # These change system settings, so an agent runs this only with Nicholas's OK.
 set -euo pipefail
 

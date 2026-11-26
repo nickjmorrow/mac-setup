@@ -11,10 +11,30 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 
 ## Setting up a new Mac
 
-1. Sign in to iCloud and the App Store. Clone this repo to `~/Projects/mac-setup` and run `./setup.sh` in a terminal.
+1. Sign in to iCloud and the App Store. Clone this repo to `~/Projects/mac-setup` (the first `git` on a new Mac offers to install Apple's command line tools: accept, then clone again) and run `./setup.sh` in a terminal. It installs `Brewfile` (what every Mac gets), then `Brewfile.personal`.
 2. It installs `bws` (Bitwarden Secrets Manager's CLI; pinned SHA-256, then Bitwarden's signature and Apple's notarization are checked) and asks for an access token, saved in the login Keychain with no app trusted (`-T ""`), so each read asks first: a read-only machine account's token as `bws-access-token-read` (what `pull` uses), plus, only on a Mac that pushes secrets, the read-write one as `bws-access-token`. Click Allow, not Always Allow. Run `./setup.sh` again: `secrets.py` pulls every secret into place, then it clones the personal repos listed in the private repo list and runs each one's `install.sh`.
 3. Run `./macos.sh` for macOS preferences (the agent asks first; it changes system settings).
 4. Do the settings below that no script covers. Re-run `./secrets.py pull` after cloning a project whose `.env` lives in Bitwarden.
+
+## Setting up a work Mac
+
+A Mac an employer owns gets his tools and shell, and nothing personal. The employer's IT rules win over anything here.
+
+1. Finish the employer's own setup first (their account, device management, their sign-ins).
+2. Clone this repo to `~/Projects/mac-setup` and run `./setup.sh --work`. It installs Homebrew (needs an admin account; if he isn't one, ask IT), `Brewfile` and the dotfiles, and stops. It skips `Brewfile.personal`, the secrets and the personal repos, and remembers the choice in `~/.config/mac-setup/profile`, so a later plain `./setup.sh` stays in work mode. The dotfiles' `link.sh` reads the same file and leaves out the app-icon background job.
+3. `./macos.sh` (dark mode, tap to click, Dock, Chrome as default browser).
+4. Git identity: his name with the work email, not the personal one (`git config --global user.email …`); default branch `main`. Make a new SSH key for the employer's Git host; never copy a key from another Mac.
+5. Optional, for the home dock: the monitor-brightness job and hotkeys (`tools/display-brightness/README.md`, "On another Mac").
+
+Never on a work Mac:
+
+- The Bitwarden access token, `secrets.py pull`, or any personal secret, API key or `~/.zshrc.local` copied from another Mac.
+- His personal repos, the personal agent's rules, memory and skills, or his notes.
+- Tailscale on his own tailnet, his VPNs, Sync.com, torrents.
+- The power and lock settings below (never sleeps, no auto-lock): leave what IT set.
+- The employer's code, data or credentials going the other way: none of it on a personal Mac, in a personal repo or in Bitwarden.
+
+A coding agent there reads this file for the folder, package and Ask-first rules (point `~/.claude/CLAUDE.md` at it), has no private files to read, and installs only software the employer allows.
 
 ## Settings no script covers
 
@@ -38,16 +58,17 @@ Keep it current. This repo is public, so it holds only what helps set up a new M
 ## Packages
 
 - The agent may install packages with Homebrew without asking.
-- Every install or removal is reflected in `Brewfile` in the same change. Edit it by hand, in the right section with a short comment: `brew bundle dump --force` would wipe its sections and comments (use `brew bundle dump --file=- ` only to spot what's missing).
-- App Store apps go in the Brewfile too, as `mas` lines.
+- Every install or removal is reflected in the same change: in `Brewfile` when a work Mac should get it too (dev tools, editor, terminal, dock drivers), otherwise in `Brewfile.personal`. Edit it by hand, in the right section with a short comment: `brew bundle dump --force` would wipe its sections and comments (use `brew bundle dump --file=- ` only to spot what's missing).
+- App Store apps go in `Brewfile.personal`, as `mas` lines.
+- A formula from a third-party tap (`owner/tap/name`) also goes in `TRUSTED_FORMULAE` in `setup.sh`: Homebrew won't load it until it's trusted.
 - Global npm packages can't be pinned in the Brewfile (`brew bundle` matches them by bare name); note the known-good version in a comment beside the line.
 
 ## Scripts
 
-- `setup.sh` — idempotent bootstrap: Homebrew, adopt pre-installed apps, `brew bundle`. Run it in a real terminal (installers may ask for a password).
+- `setup.sh` — idempotent bootstrap: Homebrew, adopt pre-installed apps, `brew bundle` for both Brewfiles, dotfiles, secrets, personal repos. `--work` stops after the shared Brewfile and dotfiles (see above). Run it in a real terminal (installers may ask for a password).
 - `macos.sh` — macOS preferences (appearance, trackpad, Dock). Changes system settings, so the agent asks before running it.
 - `secrets.py` — secrets live in Bitwarden Secrets Manager (project `personal-agent`), never in git or a synced folder. Each secret's key says where it goes: `env:NAME` becomes a line `export NAME='value'` in `~/.zshrc.local` (names must match `^[A-Z_][A-Z0-9_]*$`; values are stored raw and shell-quoted on write; an older value stored with its quotes, like `"abc"`, is unquoted on pull, and `push-env` stores it unquoted), `file:~/path` a file (mode 600). File destinations are an allowlist, checked on the resolved path (no `..`, no symlink leading elsewhere): `~/.config/**`, `~/.eight-sleep-mcp/**`, `~/.ssh/config`, and `.env` / `.env.*` directly inside a `~/Projects/<project>` folder. Anything else (shell rc files, `~/Library`, other `~/.ssh` files) is refused and reported, and `pull` exits 1; `push-file` refuses the same paths. `pull` writes them all (`--check` / `--dry-run` shows what would change and what's refused); `push-env` / `push-file` upload a change. Tokens come from the login Keychain (`pull` and `list` prefer `bws-access-token-read`, `push-*` use `bws-access-token`), so on a server Mac run it from the login session, not over SSH. Tests: `python3 -m unittest` (temp HOME and a fake `bws`; no network or Keychain). Files that apps rewrite on their own (refreshing login tokens) and SSH keys (one per Mac) stay local.
-- `tools/display-brightness` — day/night monitor brightness (see its README).
+- `tools/display-brightness` — day/night monitor brightness (see its README; `setup.sh` doesn't install its launchd job or start skhd).
 - `tools/set-env-secret NAME [ssh-host …]` — sets or rotates a shared env secret from the clipboard: Bitwarden (`env:NAME`), this Mac's `~/.zshrc.local` and each host's. The value never shows on screen.
 
 ## Shared API keys
