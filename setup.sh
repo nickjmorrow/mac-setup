@@ -18,9 +18,19 @@ PROFILE=personal
 step() { print -P "\n%F{cyan}==>%f %B$1%b" }
 
 step "Homebrew"
+# Installing Homebrew needs an admin account. Without one, skip it and the Brewfile and still link the dotfiles.
+HAVE_BREW=true
 if [[ ! -x /opt/homebrew/bin/brew ]]; then
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ " $(id -Gn) " == *" admin "* ]]; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  else
+    HAVE_BREW=false
+    print "This account isn't an admin, so Homebrew can't be installed. Skipping it and the Brewfile."
+    print "Ask IT for admin rights or to install Homebrew, then re-run ./setup.sh."
+  fi
 fi
+
+if $HAVE_BREW; then
 eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 
 step "Adopt apps installed outside Homebrew"
@@ -43,6 +53,7 @@ else
   print "App Store apps need you signed in to the App Store app; if they fail, sign in and re-run."
   brew bundle --file="$HERE/Brewfile.personal"
 fi
+fi  # HAVE_BREW
 
 step "Dotfiles"
 if [[ ! -d ~/Projects/dotfiles ]]; then
@@ -53,6 +64,7 @@ fi
 if [[ $PROFILE == work ]]; then
   step "Done"
   print "Work Mac: no personal secrets or repos here. Next: the work-Mac list in AGENTS.md."
+  $HAVE_BREW || print "Homebrew and the Brewfile were skipped (not an admin): re-run once IT has sorted that."
   exit 0
 fi
 
